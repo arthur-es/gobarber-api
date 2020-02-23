@@ -19,6 +19,33 @@ class UserController {
       console.log(err);
     }
   }
+
+  async update(req, res) {
+    const { email, oldPassword } = req.body;
+
+    try {
+      const user = await User.findByPk(req.userId);
+
+      if (email && email != user.email) {
+        const userExists = await User.findOne({
+          where: { email }
+        });
+        if (userExists) {
+          return res.status(400).json({ error: "User email already taken" });
+        }
+      }
+
+      if (oldPassword && !(await user.checkPassword(oldPassword))) {
+        return res.status(401).json({ error: "Old password is wrong" });
+      }
+
+      const { id, name, provider } = await user.update(req.body);
+
+      return res.json({ id, name, email, provider });
+    } catch (err) {
+      console.log(err);
+    }
+  }
 }
 
 export default new UserController();
